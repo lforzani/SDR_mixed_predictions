@@ -1,0 +1,45 @@
+function [WX,W] = eigHLDA(Yaux,X,u,morph)
+%----checking type of response ......................
+if strcmpi(morph,'disc'),
+    Y = grp2idx(Yaux);
+    parameters.nslices = max(Y);
+else % morph = 'cont'
+    Y = Yaux;
+    parameters.nslices = length(Y);
+end        
+
+%--- get sample statistics ................................................
+data_parameters = setdatapars(Y,X,parameters.nslices);
+%the size of the data space  
+[Nt p] = size(X);
+
+if strcmpi(morph,'cont')
+    SIGMAfit = get_fitted_cov(Y,X,FF);
+else
+    SIGMAfit = get_average_cov(X,data_parameters);
+end
+SIGMA = data_parameters.sigmag;
+SIGMAres = SIGMA - SIGMAfit;
+data_parameters.Afit = SIGMAfit;
+data_parameters.B = SIGMAres;
+
+Shlda = -n*logm(SIGMA);
+for i=1:h,
+    sigma_i(:,:) = sigmas(i,:,:);
+    Shlda= Shlda + n(i)*logm(sigma_i)
+end
+Shlda = Shlda/2;
+
+[V,D]=firsteigs(Shlda,u);
+W=orth(V);
+WX=X*W;
+
+
+function R = logmat(M)
+%logarithm of a matrix
+
+[V D]= eig(M);
+d = diag(D);
+logd = log(d);
+D = diag(logd);
+R = V * D * V';
